@@ -4,6 +4,17 @@ from datetime import datetime
 
 class AttendanceManager:
     def __init__(self, file_path='attendance_log.csv'):
+        # On Vercel, the filesystem is read-only except for /tmp
+        if os.environ.get('VERCEL') == '1':
+            import shutil
+            bundled_path = os.path.abspath(file_path)
+            file_path = '/tmp/attendance_log.csv'
+            if not os.path.exists(file_path) and os.path.exists(bundled_path):
+                try:
+                    shutil.copy(bundled_path, file_path)
+                except Exception:
+                    pass
+
         self.file_path = file_path
         self.columns = ['Name', 'ID', 'Date', 'Time', 'Status']
         # In-memory cache of today's marked IDs to avoid redundant CSV reads
