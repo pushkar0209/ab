@@ -1,0 +1,28 @@
++---------------------+       +----------------------+       +-----------------------+
+|   Webcam Feed       | ----> |   Face Detection     | ----> |   Liveness Check      |
+|  (cv2.VideoCapture) |       | (Haar Cascade/MTCNN) |       | (Laplacian Variance)  |
++---------------------+       +----------------------+       +-----------------------+
+                                                                         |
+                                                                         v
+                                                             +-----------------------+
+                                                             |   Face Preprocessing  |
+                                                             | (Resize 160x160, Norm)|
+                                                             +-----------------------+
+                                                                         |
+                                                                         v
+                                                             +-----------------------+
+                                                             |   Face Recognition    |
+                                                             |   (FaceNet Model)     |
+                                                             +-----------------------+
+                                                                         |
+                                                                         v
+                                                             +-----------------------+
+                                                             |  Embedding Matching   |
+                                                             | (Euclidean Distance)  |
+                                                             +-----------------------+
+                                                                         |
+                                                                         v
++---------------------+       +----------------------+       +-----------------------+
+|   Attendance Log    | <---- |   Attendance Logic   | <---- |   Identity Verification|
+| (CSV / SQLite DB)   |       | (Duplicate Check)    |       | (Threshold < 0.6)      |
++---------------------+       +----------------------+       +-----------------------+

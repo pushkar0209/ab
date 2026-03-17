@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Attendance Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ── CSS Reset & Variables ─────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-0: #0b0e17;
+            --bg-1: #111627;
+            --bg-2: #182038;
+            --border: #1e2d4a;
+            --accent: #00d4ff;
+            --accent2: #00ff99;
+            --danger: #ff4f6a;
+            --warn: #ff9442;
+            --text: #e2e8f0;
+            --muted: #6b7fa3;
+            --card-r: 12px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .6);
+            --transition: 0.22s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-0);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Layout ─────────────────────────────────────────────────────────── */
+        .page {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────────────── */
+        header {
+            background: linear-gradient(135deg, #0d1a35 0%, #0b1420 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+
+        .logo .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent2);
+            box-shadow: 0 0 8px var(--accent2);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.45);
+                opacity: .7;
+            }
+        }
+
+        .live-badge {
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--accent2);
+            border: 1px solid var(--accent2);
+            border-radius: 99px;
+            padding: 2px 10px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        /* ── Main content ───────────────────────────────────────────────────── */
+        main {
+            padding: 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ── Stat Cards Row ─────────────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            border-radius: var(--card-r);
+            padding: 1.4rem 1.2rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--card-r) var(--card-r) 0 0;
+            background: var(--accent-color, var(--accent));
+        }
+
+        .stat-label {
+            font-size: .78rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: .5rem;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-sub {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: .4rem;
+        }
+
+        /* ── Panel Grid ─────────────────────────────────────────────────────── */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.4rem;
+        }
+
+        @media (max-width: 900px) {
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            border-radius: var(--card-r);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: .85rem 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-2);
+        }
+
+        .panel-title {
+            font-size: .88rem;
+            font-weight: 600;
+            letter-spacing: .03em;
+        }
+
+        .panel-body {
+            padding: 1.2rem;
+        }
+
+        /* ── Filter row ─────────────────────────────────────────────────────── */
+        .filter-row {
+            display: flex;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        select,
+        input[type="text"] {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            padding: .5rem .85rem;
+            font-size: .85rem;
+            outline: none;
+            transition: border-color var(--transition);
+        }
+
+        select:focus,
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        /* ── Table ──────────────────────────────────────────────────────────── */
+        .table-wrap {
+            overflow-x: auto;
+            max-height: 420px;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .84rem;
+        }
+
+        thead th {
+            background: var(--bg-2);
+            padding: .7rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: .72rem;
+            letter-spacing: .07em;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-2);
+        }
+
+        tbody td {
+            padding: .7rem 1rem;
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 99px;
+            font-size: .72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .badge-green {
+            background: rgba(0, 255, 153, .12);
+            color: var(--accent2);
+            border: 1px solid rgba(0, 255, 153, .3);
+        }
+
+        .badge-blue {
+            background: rgba(0, 212, 255, .12);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, .3);
+        }
+
+        .badge-orange {
+            background: rgba(255, 148, 66, .12);
+            color: var(--warn);
+            border: 1px solid rgba(255, 148, 66, .3);
+        }
+
+        /* ── Right sidebar ──────────────────────────────────────────────────── */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        /* ── Manual Mark Form ─────────────────────────────────────────────── */
+        .form-group {
+            margin-bottom: .9rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .78rem;
+            color: var(--muted);
+            margin-bottom: .35rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .55rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: .85rem;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #005fcc, var(--accent));
+            color: #fff;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
+
+        .form-msg {
+            font-size: .8rem;
+            margin-top: .6rem;
+            min-height: 1.2em;
+            padding: .3rem .6rem;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .form-msg.success {
+            display: block;
+            color: var(--accent2);
+            background: rgba(0, 255, 153, .08);
+        }
+
+        .form-msg.error {
+            display: block;
+            color: var(--danger);
+            background: rgba(255, 79, 106, .08);
+        }
+
+        /* ── Today List ─────────────────────────────────────────────────────── */
+        .today-list {
+            list-style: none;
+        }
+
+        .today-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .55rem .2rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .84rem;
+            transition: background var(--transition);
+        }
+
+        .today-list li:last-child {
+            border-bottom: none;
+        }
+
+        .today-list li:hover {
+            background: var(--bg-2);
+            border-radius: 6px;
+        }
+
+        .student-name {
+            font-weight: 500;
+        }
+
+        .student-time {
+            color: var(--muted);
+            font-size: .75rem;
+        }
+
+        /* ── Loading spinner ────────────────────────────────────────────────── */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            margin: 2rem auto;
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Empty state ────────────────────────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--muted);
+        }
+
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+        }
+
+        /* ── Responsive ─────────────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            main {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+
+        <!-- ── Header ──────────────────────────────────────────────────────────── -->
+        <header>
+            <div class="logo">
+                <div class="dot"></div>
+                Smart Attendance Dashboard
+            </div>
+            <span class="live-badge" id="live-badge">Live</span>
+        </header>
+
+        <!-- ── Main ────────────────────────────────────────────────────────────── -->
+        <main>
+
+            <!-- Stat cards -->
+            <div class="stats-grid">
+                <div class="stat-card" style="--accent-color: var(--accent2)">
+                    <div class="stat-label">Today's Attendance</div>
+                    <div class="stat-value" id="today-count">–</div>
+                    <div class="stat-sub">unique students</div>
+                </div>
+                <div class="stat-card" style="--accent-color: var(--accent)">
+                    <div class="stat-label">Total Records</div>
+                    <div class="stat-value" id="total-records">–</div>
+                    <div class="stat-sub">all-time entries</div>
+                </div>
+                <div class="stat-card" style="--accent-color: var(--warn)">
+                    <div class="stat-label">Days Tracked</div>
+                    <div class="stat-value" id="days-tracked">–</div>
+                    <div class="stat-sub">calendar days</div>
+                </div>
+                <div class="stat-card" style="--accent-color: #a78bfa">
+                    <div class="stat-label">Last Refreshed</div>
+                    <div class="stat-value" id="last-refresh" style="font-size:1.1rem">–</div>
+                    <div class="stat-sub" id="refresh-sub">auto-refreshes every 15s</div>
+                </div>
+            </div>
+
+            <div class="panel-grid">
+
+                <!-- ── Attendance Table ─────────────────────────────────────────────── -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Attendance Records</span>
+                        <div class="filter-row" style="margin-bottom:0">
+                            <select id="date-select" title="Filter by date">
+                                <option value="">All Dates</option>
+                            </select>
+                            <input type="text" id="search-input" placeholder="Search name / ID…" style="width:180px" />
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding:.8rem">
+                        <div class="table-wrap">
+                            <table id="attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>ID</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="spinner"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+                <div class="sidebar">
+
+                    <!-- Today's students panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Today's Students</span>
+                            <span class="badge badge-green" id="today-badge">0</span>
+                        </div>
+                        <div class="panel-body" style="padding:.8rem 1rem">
+                            <ul class="today-list" id="today-list">
+                                <li><span class="student-name" style="color:var(--muted)">Loading…</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Manual mark panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Manual Mark</span>
+                            <span class="badge badge-blue">Admin</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label for="m-name">Student Name</label>
+                                <input type="text" id="m-name" placeholder="e.g. John Doe" />
+                            </div>
+                            <div class="form-group">
+                                <label for="m-id">Student ID</label>
+                                <input type="text" id="m-id" placeholder="e.g. 101" />
+                            </div>
+                            <button class="btn btn-primary" onclick="manualMark()">Mark Attendance</button>
+                            <div class="form-msg" id="form-msg"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        /* ── State ─────────────────────────────────────────────────────────────── */
+        let allRecords = [];
+        let selectedDate = '';
+        let searchTerm = '';
+
+        /* ── Fetch helpers ──────────────────────────────────────────────────────── */
+        async function fetchSummary() {
+            const res = await fetch('/api/summary');
+            return res.json();
+        }
+
+        async function fetchAllRecords() {
+            const res = await fetch('/api/attendance');
+            const data = await res.json();
+            return data.records;
+        }
+
+        async function fetchTodayRecords() {
+            const today = new Date().toISOString().slice(0, 10);
+            const res = await fetch(`/api/attendance?date=${today}`);
+            const data = await res.json();
+            return data.records;
+        }
+
+        /* ── Render ─────────────────────────────────────────────────────────────── */
+        function renderTable(records) {
+            const tbody = document.getElementById('table-body');
+            if (!records.length) {
+                tbody.innerHTML = `<tr><td colspan="6">
+        <div class="empty-state">
+          <div class="icon">📋</div>
+          <div>No records found</div>
+        </div>
+      </td></tr>`;
+                return;
+            }
+
+            const statusBadge = (s) => {
+                if (!s) s = 'Present';
+                if (s === 'Present') return `<span class="badge badge-green">${s}</span>`;
+                return `<span class="badge badge-orange">${s}</span>`;
+            };
+
+            tbody.innerHTML = records.map((r, i) => `
+      <tr>
+        <td style="color:var(--muted)">${i + 1}</td>
+        <td><strong>${r.Name || '—'}</strong></td>
+        <td><span class="badge badge-blue">${r.ID || '—'}</span></td>
+        <td>${r.Date || '—'}</td>
+        <td style="font-variant-numeric:tabular-nums">${r.Time || '—'}</td>
+        <td>${statusBadge(r.Status)}</td>
+      </tr>
+    `).join('');
+        }
+
+        function renderTodayList(records) {
+            const list = document.getElementById('today-list');
+            const badge = document.getElementById('today-badge');
+            const uniq = [...new Map(records.map(r => [r.ID, r])).values()];
+            badge.textContent = uniq.length;
+
+            if (!uniq.length) {
+                list.innerHTML = `<li><span class="student-name" style="color:var(--muted)">No students yet today</span></li>`;
+                return;
+            }
+            list.innerHTML = uniq.map(r => `
+      <li>
+        <span class="student-name">${r.Name}
+          <small style="color:var(--muted);margin-left:.4rem">#${r.ID}</small>
+        </span>
+        <span class="student-time">${r.Time}</span>
+      </li>
+    `).join('');
+        }
+
+        function applyFilters() {
+            let filtered = allRecords;
+            if (selectedDate)
+                filtered = filtered.filter(r => r.Date === selectedDate);
+            if (searchTerm) {
+                const q = searchTerm.toLowerCase();
+                filtered = filtered.filter(r =>
+                    (r.Name || '').toLowerCase().includes(q) ||
+                    String(r.ID || '').toLowerCase().includes(q)
+                );
+            }
+            renderTable(filtered);
+        }
+
+        function populateDateSelect(records) {
+            const dates = [...new Set(records.map(r => r.Date))].sort().reverse();
+            const select = document.getElementById('date-select');
+            // Keep first (All Dates) option
+            select.innerHTML = '<option value="">All Dates</option>' +
+                dates.map(d => `<option value="${d}">${d}</option>`).join('');
+            if (selectedDate)
+                select.value = selectedDate;
+        }
+
+        /* ── Refresh all data ───────────────────────────────────────────────────── */
+        async function refresh() {
+            try {
+                const [summary, records, todayRecords] = await Promise.all([
+                    fetchSummary(),
+                    fetchAllRecords(),
+                    fetchTodayRecords(),
+                ]);
+
+                // Stats
+                document.getElementById('today-count').textContent = summary.unique_students_today;
+                document.getElementById('total-records').textContent = summary.total_records;
+                document.getElementById('days-tracked').textContent = summary.all_dates.length;
+                document.getElementById('last-refresh').textContent = new Date().toLocaleTimeString();
+
+                // Table
+                allRecords = records;
+                populateDateSelect(records);
+                applyFilters();
+
+                // Today sidebar
+                renderTodayList(todayRecords);
+
+            } catch (err) {
+                console.error('Refresh error:', err);
+            }
+        }
+
+        /* ── Manual mark ────────────────────────────────────────────────────────── */
+        async function manualMark() {
+            const name = document.getElementById('m-name').value.trim();
+            const id = document.getElementById('m-id').value.trim();
+            const msg = document.getElementById('form-msg');
+            msg.className = 'form-msg';
+            msg.style.display = 'none';
+
+            if (!name || !id) {
+                msg.textContent = 'Both Name and ID are required.';
+                msg.className = 'form-msg error';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, id }),
+                });
+                const data = await res.json();
+                msg.textContent = data.message;
+                msg.className = `form-msg ${data.success ? 'success' : 'error'}`;
+                if (data.success) {
+                    document.getElementById('m-name').value = '';
+                    document.getElementById('m-id').value = '';
+                    await refresh();
+                }
+            } catch (err) {
+                msg.textContent = 'Server error – check console.';
+                msg.className = 'form-msg error';
+            }
+        }
+
+        /* ── Event listeners ────────────────────────────────────────────────────── */
+        document.getElementById('date-select').addEventListener('change', e => {
+            selectedDate = e.target.value;
+            applyFilters();
+        });
+        document.getElementById('search-input').addEventListener('input', e => {
+            searchTerm = e.target.value.trim();
+            applyFilters();
+        });
+
+        /* ── Init & auto-refresh ────────────────────────────────────────────────── */
+        refresh();
+        setInterval(refresh, 15000);  // every 15 seconds
+    </script>
+</body>
+
+</html>
